@@ -47,8 +47,8 @@ func run() int {
 	// Initialize logger
 	appLogger := logger.InitLog(
 		nil,
-		logger.WithDebug(cfg.Logging.Debug),
 		logger.WithLevel(cfg.Logging.Level),
+		logger.WithDebug(cfg.Logging.Debug),
 		logger.WithFormat(cfg.Logging.Format),
 	)
 	appLog := log.NewEntry(appLogger)
@@ -180,8 +180,8 @@ func loadAndValidateConfig(cliArgs []string, configContent []byte) (*config.Glob
 func reloadLogger(appLogger *log.Logger, cfg *config.GlobalConfig) {
 	logger.InitLog(
 		appLogger,
-		logger.WithDebug(cfg.Logging.Debug),
 		logger.WithLevel(cfg.Logging.Level),
+		logger.WithDebug(cfg.Logging.Debug),
 		logger.WithFormat(cfg.Logging.Format),
 	)
 

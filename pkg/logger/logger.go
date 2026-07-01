@@ -2,6 +2,8 @@
 package logger
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,21 +27,42 @@ func WithFormat(format string) Option {
 	return func(l *log.Logger) {
 		switch format {
 		case "json":
+			l.SetReportCaller(false)
 			l.SetFormatter(&log.JSONFormatter{
 				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
 			})
 		case "text":
+			l.SetReportCaller(false)
 			l.SetFormatter(&log.TextFormatter{
 				FullTimestamp:   true,
 				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
 			})
+		case "debug":
+			l.SetFormatter(&log.TextFormatter{
+				DisableColors:    !isTerminal(),
+				FullTimestamp:    true,
+				TimestampFormat:  "2006-01-02T15:04:05.000Z07:00",
+				ForceQuote:       true,
+				PadLevelText:     true,
+				CallerPrettyfier: nil,
+			})
+			l.SetReportCaller(true)
 		default:
 			log.WithField("format", format).Warn("Unknown log format, using json")
+			l.SetReportCaller(false)
 			l.SetFormatter(&log.JSONFormatter{
 				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
 			})
 		}
 	}
+}
+
+func isTerminal() bool {
+	fileInfo, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	return (fileInfo.Mode() & os.ModeCharDevice) != 0
 }
 
 // WithDebug enables debug mode

@@ -5,8 +5,8 @@ metadata:
   namespace: grafana
 type: Opaque
 stringData:
-  bearer-token: notify-console:CHANGE_ME_TO_A_LONG_RANDOM_SECRET
-  feishu-open-id: ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  bearer-token: grafana:grafana
+  feishu-open-id: ou_7fb2f2969dc389a1478aedeb680675f3
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaContactPoint

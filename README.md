@@ -73,6 +73,8 @@ Then set `auth.credentialsFilePath` in `config.yaml` to `/tmp/sealos-notify-auth
 go run . -c config.yaml
 ```
 
+For detailed local debugging, set `logging.debug: true` and `logging.format: debug`. This enables debug-level logs and prints each HTTP request with method, path, query, headers, remote address, and raw body. Sensitive credential headers such as `Authorization` and `X-App-Secret` are redacted.
+
 Or run with Docker:
 
 ```bash

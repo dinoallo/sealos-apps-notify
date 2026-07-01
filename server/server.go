@@ -2,9 +2,12 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -196,6 +199,7 @@ func (s *Server) loggingMiddleware() gin.HandlerFunc {
 		start := time.Now()
 		path := c.Request.URL.Path
 		method := c.Request.Method
+		requestFields := s.debugRequestFields(c)
 
 		c.Next()
 
@@ -205,7 +209,50 @@ func (s *Server) loggingMiddleware() gin.HandlerFunc {
 			"status":  c.Writer.Status(),
 			"latency": time.Since(start),
 		}).Info("HTTP request")
+
+		if requestFields != nil && s.logger.Logger.IsLevelEnabled(log.DebugLevel) {
+			requestFields["status"] = c.Writer.Status()
+			requestFields["latency"] = time.Since(start)
+			requestFields["errors"] = c.Errors.String()
+			s.logger.WithFields(requestFields).Debug("HTTP raw request")
+		}
 	}
+}
+
+func (s *Server) debugRequestFields(c *gin.Context) log.Fields {
+	if !s.logger.Logger.IsLevelEnabled(log.DebugLevel) {
+		return nil
+	}
+
+	var body []byte
+	if c.Request.Body != nil {
+		body, _ = io.ReadAll(c.Request.Body)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	}
+
+	return log.Fields{
+		"method":         c.Request.Method,
+		"path":           c.Request.URL.Path,
+		"raw_query":      c.Request.URL.RawQuery,
+		"host":           c.Request.Host,
+		"remote_addr":    c.Request.RemoteAddr,
+		"client_ip":      c.ClientIP(),
+		"user_agent":     c.Request.UserAgent(),
+		"content_length": c.Request.ContentLength,
+		"headers":        redactHeaders(c.Request.Header),
+		"body":           string(body),
+	}
+}
+
+func redactHeaders(headers http.Header) http.Header {
+	redacted := headers.Clone()
+	for key := range redacted {
+		switch strings.ToLower(key) {
+		case "authorization", "cookie", "set-cookie", "x-app-secret":
+			redacted.Set(key, "[REDACTED]")
+		}
+	}
+	return redacted
 }
 
 // Serve starts the HTTP server

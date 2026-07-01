@@ -71,7 +71,7 @@ type DatabaseConfig struct {
 // LoggingConfig contains logging configuration
 type LoggingConfig struct {
 	Level  string `yaml:"level" name:"level" env:"LEVEL" default:"info" help:"Log level (debug, info, warn, error)"`
-	Format string `yaml:"format" name:"format" env:"FORMAT" default:"json" help:"Log format (json, text)"`
+	Format string `yaml:"format" name:"format" env:"FORMAT" default:"json" help:"Log format (json, text, debug)"`
 	Debug  bool   `yaml:"debug" name:"debug" env:"DEBUG" default:"false" help:"Enable debug mode"`
 }
 
