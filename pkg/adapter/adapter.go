@@ -28,8 +28,10 @@ func RecipientIdentifierKeys(channelName string) []string {
 		return []string{"phone"}
 	case "inapp":
 		return []string{"user_id"}
-	case "feishu_app", "feishu_webhook":
+	case "feishu_app":
 		return []string{"feishu_user_id", "email"}
+	case "feishu_webhook":
+		return []string{"webhook", "feishu_webhook", "feishu_user_id", "email"}
 	default:
 		return nil
 	}

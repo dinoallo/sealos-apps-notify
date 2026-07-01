@@ -108,9 +108,12 @@ providers:
 
   feishu-webhook-default:
     type: feishu_webhook
-    webhookFromSecret:
-      name: notify-feishu-webhook-secret
-      key: url
+    # Optional static webhook. Grafana can also pass the target webhook per
+    # notification in channels.feishu_webhook.params.webhook.
+    webhook: "${FEISHU_WEBHOOK_URL}"
+    # Optional bot signing secret.
+    secret: "${FEISHU_WEBHOOK_SECRET}"
+    msgType: "interactive"
 
   # Feishu App urgent notification provider
   # Obtain appId and appSecret from the Feishu/Lark Developer Console:

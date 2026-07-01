@@ -253,7 +253,7 @@ func (d *Dispatcher) processTask(ctx context.Context, task *database.DeliveryTas
 		TemplateCode:   tpl.TemplateCode,
 		Variables:      strVars,
 		MsgType:        tpl.MsgType,
-		Metadata:       map[string]string{},
+		Metadata:       strVars,
 	}
 
 	startTime := time.Now()

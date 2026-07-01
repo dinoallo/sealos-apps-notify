@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/labring/sealos-notify/pkg/adapter"
 	feishuapp "github.com/labring/sealos-notify/pkg/adapter/feishu_app"
+	feishuwebhook "github.com/labring/sealos-notify/pkg/adapter/feishu_webhook"
 	"github.com/labring/sealos-notify/pkg/auth"
 	"github.com/labring/sealos-notify/pkg/config"
 	"github.com/labring/sealos-notify/pkg/database"
@@ -157,6 +158,14 @@ func (s *Server) initAdapters() error {
 			}
 			s.adapters[providerName] = a
 			logger.Info("Feishu app adapter initialized")
+
+		case "feishu_webhook":
+			a, err := feishuwebhook.New(providerConfig.Data)
+			if err != nil {
+				return fmt.Errorf("failed to initialize feishu_webhook adapter %q: %w", providerName, err)
+			}
+			s.adapters[providerName] = a
+			logger.Info("Feishu webhook adapter initialized")
 
 		default:
 			logger.Debug("Provider configured (adapter not yet implemented)")

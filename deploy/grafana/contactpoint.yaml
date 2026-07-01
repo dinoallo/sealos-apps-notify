@@ -7,6 +7,7 @@ type: Opaque
 stringData:
   bearer-token: grafana:grafana
   feishu-open-id: ou_7fb2f2969dc389a1478aedeb680675f3
+  feishu-webhook-url: https://open.feishu.cn/open-apis/bot/v2/hook/REPLACE_WITH_TOKEN
 ---
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaContactPoint
@@ -67,3 +68,70 @@ spec:
         secretKeyRef:
           name: sealos-notify-contactpoint
           key: feishu-open-id
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaContactPoint
+metadata:
+  name: sealos-notify-feishu-webhook
+  namespace: grafana
+spec:
+  allowCrossNamespaceImport: false
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  name: sealos-notify-feishu-webhook
+  resyncPeriod: 10m0s
+  settings:
+    url: http://sealos-notify.ns-admin.svc.cluster.local:8080/api/v1/notifications
+    httpMethod: POST
+    authorization_scheme: Bearer
+    payload:
+      template: |
+        {{- $fingerprint := .GroupKey -}}
+        {{- $cardColor := "red" -}}
+        {{- if gt (len .Alerts) 0 -}}
+          {{- $fingerprint = (index .Alerts 0).Fingerprint -}}
+        {{- end -}}
+        {{- if eq .Status "resolved" -}}
+          {{- $cardColor = "green" -}}
+        {{- end -}}
+        {{ coll.Dict
+          "idempotencyKey" (printf "grafana-feishu-webhook-%s-%s" .Status $fingerprint)
+          "channels" (coll.Dict
+            "feishu_webhook" (coll.Dict
+              "template" "feishu-grafana-webhook-alert"
+              "params" (coll.Dict
+                "webhook" .Vars.feishu_webhook_url
+                "cardColor" $cardColor
+                "status" .Status
+                "alertname" .CommonLabels.alertname
+                "severity" .CommonLabels.severity
+                "labels" (.CommonLabels | data.ToJSON)
+                "summary" .CommonAnnotations.summary
+                "description" .CommonAnnotations.description
+                "groupKey" .GroupKey
+                "externalURL" .ExternalURL
+              )
+            )
+          )
+          "recipients" (coll.Slice
+            (coll.Dict
+              "type" "webhook"
+              "value" .Vars.feishu_webhook_url
+            )
+          )
+        | data.ToJSON }}
+      vars:
+        feishu_webhook_url: ""
+  type: webhook
+  valuesFrom:
+    - targetPath: authorization_credentials
+      valueFrom:
+        secretKeyRef:
+          name: sealos-notify-contactpoint
+          key: bearer-token
+    - targetPath: payload.vars.feishu_webhook_url
+      valueFrom:
+        secretKeyRef:
+          name: sealos-notify-contactpoint
+          key: feishu-webhook-url

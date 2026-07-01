@@ -108,6 +108,7 @@ Grafana contact point 发送给 notify 的 payload 里使用了模板名：
 
 ```text
 feishu-grafana-alert
+feishu-grafana-webhook-alert
 ```
 
 因此需要先在 `sealos-notify` 中创建这个模板。
@@ -144,6 +145,23 @@ curl -X PUT "$NOTIFY_BASE_URL/api/v1/templates/feishu-grafana-alert" \
   }'
 ```
 
+如果要使用飞书普通群机器人通知，再创建一个飞书卡片模板：
+
+```bash
+curl -X POST "$NOTIFY_BASE_URL/api/v1/templates" \
+  -H "Content-Type: application/json" \
+  -H "X-App-Id: $NOTIFY_APP_ID" \
+  -H "X-App-Secret: $NOTIFY_APP_SECRET" \
+  -d '{
+    "name": "feishu-grafana-webhook-alert",
+    "channel": "feishu_webhook",
+    "msgType": "interactive",
+    "body": "{\"config\":{\"wide_screen_mode\":true},\"header\":{\"template\":\"{{ .cardColor }}\",\"title\":{\"tag\":\"plain_text\",\"content\":\"Grafana {{ .status }}: {{ .alertname }}\"}},\"elements\":[{\"tag\":\"markdown\",\"content\":\"**Severity:** {{ .severity }}\\n**Summary:** {{ .summary }}\\n**Description:** {{ .description }}\\n**Labels:**\\n```json\\n{{ .labels }}\\n```\\n[Open Grafana]({{ .externalURL }})\"},{\"tag\":\"hr\"},{\"tag\":\"note\",\"elements\":[{\"tag\":\"plain_text\",\"content\":\"{{ .groupKey }}\"}]}]}"
+  }'
+```
+
+如果模板已经存在，使用同名 `PUT /api/v1/templates/feishu-grafana-webhook-alert` 更新即可。Grafana 会把群机器人地址写入 `channels.feishu_webhook.params.webhook`，notify 渲染卡片后转发到这个地址。
+
 ## 3. 应用 GrafanaContactPoint
 
 执行：
@@ -157,6 +175,7 @@ kubectl apply -f deploy/grafana/contactpoint.yaml
 ```text
 Secret/sealos-notify-contactpoint
 GrafanaContactPoint/sealos-notify-feishu-urgent
+GrafanaContactPoint/sealos-notify-feishu-webhook
 ```
 
 查看资源：
@@ -164,6 +183,7 @@ GrafanaContactPoint/sealos-notify-feishu-urgent
 ```bash
 kubectl get secret sealos-notify-contactpoint -n grafana
 kubectl get grafanacontactpoint sealos-notify-feishu-urgent -n grafana
+kubectl get grafanacontactpoint sealos-notify-feishu-webhook -n grafana
 ```
 
 查看同步状态：
@@ -176,6 +196,7 @@ kubectl describe grafanacontactpoint sealos-notify-feishu-urgent -n grafana
 
 ```text
 sealos-notify-feishu-urgent
+sealos-notify-feishu-webhook
 ```
 
 ## 4. 在 Grafana 告警里使用
@@ -190,6 +211,7 @@ Alerting -> Alert rules
 
 ```text
 sealos-notify-feishu-urgent
+sealos-notify-feishu-webhook
 ```
 
 也可以进入：
@@ -198,7 +220,7 @@ sealos-notify-feishu-urgent
 Alerting -> Contact points
 ```
 
-找到 `sealos-notify-feishu-urgent`，使用 Grafana 的测试按钮发送一条测试通知。
+找到 `sealos-notify-feishu-urgent` 或 `sealos-notify-feishu-webhook`，使用 Grafana 的测试按钮发送一条测试通知。
 
 ## 5. 验证 notify 是否收到
 
@@ -257,9 +279,14 @@ valuesFrom:
       secretKeyRef:
         name: sealos-notify-contactpoint
         key: feishu-open-id
+  - targetPath: payload.vars.feishu_webhook_url
+    valueFrom:
+      secretKeyRef:
+        name: sealos-notify-contactpoint
+        key: feishu-webhook-url
 ```
 
-这里把 Secret 中的敏感信息注入到 Grafana contact point 设置里，避免把真实 token 和飞书 Open ID 写死在 webhook 配置主体中。
+这里把 Secret 中的敏感信息注入到 Grafana contact point 设置里，避免把真实 token、飞书 Open ID 和飞书群机器人 webhook 写死在 webhook 配置主体中。
 
 `spec.settings.payload.template`：
 
@@ -286,6 +313,37 @@ valuesFrom:
     {
       "type": "feishu_user_id",
       "value": "ou_xxx"
+    }
+  ]
+}
+```
+
+普通飞书群机器人 contact point 会生成 `feishu_webhook` 请求：
+
+```json
+{
+  "idempotencyKey": "grafana-feishu-webhook-firing-xxx",
+  "channels": {
+    "feishu_webhook": {
+      "template": "feishu-grafana-webhook-alert",
+      "params": {
+        "webhook": "https://open.feishu.cn/open-apis/bot/v2/hook/xxx",
+        "cardColor": "red",
+        "status": "firing",
+        "alertname": "...",
+        "severity": "...",
+        "labels": "{\"alertname\":\"...\",\"severity\":\"...\"}",
+        "summary": "...",
+        "description": "...",
+        "groupKey": "...",
+        "externalURL": "..."
+      }
+    }
+  },
+  "recipients": [
+    {
+      "type": "webhook",
+      "value": "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
     }
   ]
 }

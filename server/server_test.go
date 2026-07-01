@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/labring/sealos-notify/pkg/adapter"
+	"github.com/labring/sealos-notify/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -104,6 +106,31 @@ func TestLoggingMiddlewareSkipsRawRequestWhenDebugDisabled(t *testing.T) {
 	}
 	if entry := hook.entryByMessage("HTTP request"); entry == nil {
 		t.Fatal("expected summary HTTP request log")
+	}
+}
+
+func TestInitAdaptersIncludesFeishuWebhook(t *testing.T) {
+	s := &Server{
+		config: &config.GlobalConfig{
+			Providers: map[string]config.ProviderConfig{
+				"feishu-webhook-default": {
+					Type: "feishu_webhook",
+					Data: map[string]interface{}{"msgType": "interactive"},
+				},
+			},
+		},
+		logger: log.NewEntry(log.New()),
+	}
+
+	if err := s.initAdapters(); err != nil {
+		t.Fatalf("initAdapters returned error: %v", err)
+	}
+	a, ok := s.adapters["feishu-webhook-default"]
+	if !ok {
+		t.Fatal("missing feishu webhook adapter")
+	}
+	if a.ChannelType() != adapter.ChannelTypeFeishuWebhook {
+		t.Fatalf("ChannelType = %q, want %q", a.ChannelType(), adapter.ChannelTypeFeishuWebhook)
 	}
 }
 

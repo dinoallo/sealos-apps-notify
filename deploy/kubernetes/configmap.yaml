@@ -43,11 +43,18 @@ data:
       retryBackoffSeconds: [10, 30, 60]
 
     channels:
+      feishu_webhook:
+        enabled: true
+        provider: feishu-webhook-default
       feishu_app:
         enabled: true
         provider: feishu-app-urgent
 
     providers:
+      feishu-webhook-default:
+        type: feishu_webhook
+        msgType: "interactive"
+
       feishu-app-urgent:
         type: feishu_app
         appId: "${FEISHU_APP_ID}"

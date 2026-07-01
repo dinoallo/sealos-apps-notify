@@ -16,7 +16,7 @@ func TestRecipientIdentifierKeys(t *testing.T) {
 		{name: "voice", channel: "voice", want: []string{"phone"}},
 		{name: "inapp", channel: "inapp", want: []string{"user_id"}},
 		{name: "feishu app", channel: "feishu_app", want: []string{"feishu_user_id", "email"}},
-		{name: "feishu webhook", channel: "feishu_webhook", want: []string{"feishu_user_id", "email"}},
+		{name: "feishu webhook", channel: "feishu_webhook", want: []string{"webhook", "feishu_webhook", "feishu_user_id", "email"}},
 		{name: "unknown", channel: "unknown", want: nil},
 	}
 
