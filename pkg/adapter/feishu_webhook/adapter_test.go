@@ -41,7 +41,10 @@ func TestBuildPayloadInteractiveWrapsPlainTextAsMarkdownCard(t *testing.T) {
 	if !ok {
 		t.Fatalf("card type = %T, want map", got["card"])
 	}
-	elements := card["elements"].([]map[string]interface{})
+	elements, ok := card["elements"].([]map[string]interface{})
+	if !ok {
+		t.Fatalf("elements type = %T, want []map[string]interface{}", card["elements"])
+	}
 	if elements[0]["content"] != "**firing**" {
 		t.Fatalf("wrapped content = %#v", elements[0]["content"])
 	}

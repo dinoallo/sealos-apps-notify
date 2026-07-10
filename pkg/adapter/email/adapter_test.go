@@ -124,7 +124,10 @@ func newFakeSMTPServer(t *testing.T) *fakeSMTPServer {
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
-	addr := listener.Addr().(*net.TCPAddr)
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		t.Fatalf("listener address type = %T, want *net.TCPAddr", listener.Addr())
+	}
 	server := &fakeSMTPServer{
 		listener: listener,
 		host:     "127.0.0.1",
