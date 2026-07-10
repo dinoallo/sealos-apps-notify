@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sealos-notify.fullname" . }}
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sealos-notify.appSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sealos-notify.appSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: wait-postgresql
+          image: {{ .Values.postgresql.image | quote }}
+          imagePullPolicy: {{ .Values.postgresql.imagePullPolicy }}
+          command:
+            - sh
+            - -ec
+            - |
+              until pg_isready -h {{ include "sealos-notify.database.host" . | quote }} -p {{ include "sealos-notify.database.port" . }} -U {{ include "sealos-notify.database.user" . | quote }} -d {{ include "sealos-notify.database.name" . | quote }}; do
+                sleep 2
+              done
+      containers:
+        - name: sealos-notify
+          image: {{ .Values.image | quote }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          args:
+            - --config-path
+            - /etc/sealos-notify/config.yaml
+            - --auth-credentials-file-path
+            - /etc/sealos-notify/auth/apps.yaml
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: http
+              protocol: TCP
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if .Values.externalDatabase.host }}{{ include "sealos-notify.fullname" . }}-external-database{{ else }}{{ include "sealos-notify.postgresql.fullname" . }}{{ end }}
+                  key: password
+            - name: AUTH_CREDENTIALS_FILE_PATH
+              value: /etc/sealos-notify/auth/apps.yaml
+          volumeMounts:
+            - name: config
+              mountPath: /etc/sealos-notify
+              readOnly: true
+            - name: api-auth
+              mountPath: /etc/sealos-notify/auth
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "sealos-notify.fullname" . }}-config
+        - name: api-auth
+          secret:
+            secretName: {{ include "sealos-notify.fullname" . }}-api-auth

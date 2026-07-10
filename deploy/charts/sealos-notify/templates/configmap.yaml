@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sealos-notify.fullname" . }}-config
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      address: {{ .Values.server.address | quote }}
+      readTimeout: {{ .Values.server.readTimeout }}
+      writeTimeout: {{ .Values.server.writeTimeout }}
+      idleTimeout: {{ .Values.server.idleTimeout }}
+
+    database:
+      host: {{ include "sealos-notify.database.host" . | quote }}
+      port: {{ include "sealos-notify.database.port" . }}
+      user: {{ include "sealos-notify.database.user" . | quote }}
+      password: ""
+      dbname: {{ include "sealos-notify.database.name" . | quote }}
+      sslMode: {{ include "sealos-notify.database.sslMode" . | quote }}
+      maxOpenConns: 25
+      maxIdleConns: 5
+      connMaxLifetime: 5m
+
+    logging:
+      level: {{ .Values.logging.level | quote }}
+      format: {{ .Values.logging.format | quote }}
+      debug: {{ .Values.logging.debug }}
+
+    dispatcher:
+      enabled: {{ .Values.dispatcher.enabled }}
+      interval: {{ .Values.dispatcher.interval }}
+      batchSize: {{ .Values.dispatcher.batchSize }}
+      leaseTimeout: {{ .Values.dispatcher.leaseTimeout }}
+
+    auth:
+      enabled: {{ .Values.auth.enabled }}
+      credentialsFilePath: /etc/sealos-notify/auth/apps.yaml
+
+    defaults:
+      timeoutSeconds: {{ .Values.defaults.timeoutSeconds }}
+      maxRetry: {{ .Values.defaults.maxRetry }}
+      retryBackoffSeconds:
+        {{- toYaml .Values.defaults.retryBackoffSeconds | nindent 8 }}
+
+    channels:
+      feishu_webhook:
+        enabled: {{ .Values.channels.feishuWebhook.enabled }}
+        provider: feishu-webhook-default
+
+    providers:
+      feishu-webhook-default:
+        type: feishu_webhook
+        msgType: {{ .Values.providers.feishuWebhook.msgType | quote }}
+        webhook: {{ .Values.providers.feishuWebhook.webhook | quote }}
+        secret: {{ .Values.providers.feishuWebhook.secret | quote }}
+        timeoutSeconds: {{ .Values.providers.feishuWebhook.timeoutSeconds }}

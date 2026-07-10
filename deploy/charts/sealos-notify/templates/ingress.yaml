@@ -1,0 +1,32 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "sealos-notify.fullname" . }}
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- if ne (toString .Values.sealos.disableHttps) "true" }}
+  tls:
+    - hosts:
+        - {{ include "sealos-notify.host" . | quote }}
+      secretName: {{ .Values.sealos.certSecretName | quote }}
+  {{- end }}
+  rules:
+    - host: {{ include "sealos-notify.host" . | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "sealos-notify.fullname" . }}
+                port:
+                  name: http
+{{- end }}

@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sealos-notify.fullname" . }}
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "sealos-notify.appSelectorLabels" . | nindent 4 }}
+{{- if not .Values.externalDatabase.host }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sealos-notify.postgresql.fullname" . }}
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.postgresql.port }}
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "sealos-notify.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+{{- end }}

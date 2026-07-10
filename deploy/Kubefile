@@ -1,0 +1,14 @@
+FROM scratch
+
+ARG APP_IMAGE="ghcr.io/sealos-apps/notify:sha-abe7040"
+ARG POSTGRES_IMAGE="docker.io/library/postgres:16-alpine"
+
+COPY registry registry
+COPY charts charts
+COPY images images
+COPY sealos-notify-entrypoint.sh sealos-notify-entrypoint.sh
+
+ENV APP_IMAGE="${APP_IMAGE}"
+ENV POSTGRES_IMAGE="${POSTGRES_IMAGE}"
+
+CMD ["bash sealos-notify-entrypoint.sh"]

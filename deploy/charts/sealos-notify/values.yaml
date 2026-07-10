@@ -1,0 +1,104 @@
+image: ghcr.io/sealos-apps/notify:sha-abe7040
+imagePullPolicy: IfNotPresent
+imagePullSecrets: []
+fullnameOverride: sealos-notify
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""
+  annotations: {}
+
+sealos:
+  cloudDomain: 127.0.0.1.nip.io
+  cloudPort: ""
+  httpPort: ""
+  disableHttps: false
+  certSecretName: wildcard-cert
+
+server:
+  address: ":8080"
+  readTimeout: 30s
+  writeTimeout: 30s
+  idleTimeout: 60s
+
+logging:
+  level: info
+  format: json
+  debug: false
+
+dispatcher:
+  enabled: false
+  interval: 10s
+  batchSize: 100
+  leaseTimeout: 5m
+
+auth:
+  enabled: true
+  appId: notify-console
+  appSecret: CHANGE_ME_TO_A_LONG_RANDOM_SECRET
+  appName: Notify Console
+
+defaults:
+  timeoutSeconds: 10
+  maxRetry: 3
+  retryBackoffSeconds:
+    - 30
+    - 120
+    - 300
+
+channels:
+  feishuWebhook:
+    enabled: true
+
+providers:
+  feishuWebhook:
+    msgType: interactive
+    webhook: ""
+    secret: ""
+    timeoutSeconds: 10
+
+postgresql:
+  enabled: true
+  image: docker.io/library/postgres:16-alpine
+  imagePullPolicy: IfNotPresent
+  port: 5432
+  username: postgres
+  password: postgres
+  database: sealos_notify
+  storageClassName: ""
+  storageSize: 3Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+externalDatabase:
+  host: ""
+  port: 5432
+  user: postgres
+  password: ""
+  database: sealos_notify
+  sslMode: disable
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+app:
+  enabled: false
+  name: Notify
+  description: Sealos notification service
+  icon: ""

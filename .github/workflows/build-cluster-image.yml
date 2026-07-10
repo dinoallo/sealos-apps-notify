@@ -1,0 +1,108 @@
+name: build-cluster-image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag suffix to publish
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+      - feat/smtp
+    paths:
+      - Dockerfile
+      - go.mod
+      - go.sum
+      - main.go
+      - pkg/**
+      - server/**
+      - deploy/**
+      - .github/workflows/build-cluster-image.yml
+
+concurrency:
+  group: build-cluster-image-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  APP_IMAGE_NAME: ${{ github.repository }}
+  CLUSTER_IMAGE_NAME: ${{ github.repository_owner }}/sealos-app-notify
+  SEALOS_VERSION: v5.1.1
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare tags
+        id: meta
+        shell: bash
+        env:
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag || '' }}
+        run: |
+          set -euo pipefail
+          suffix="${INPUT_IMAGE_TAG}"
+          if [ -z "${suffix}" ]; then
+            suffix="sha-${GITHUB_SHA::7}"
+          fi
+          if ! [[ "${suffix}" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+            echo "Invalid image_tag ${suffix}; allowed characters: A-Z a-z 0-9 _ . -" >&2
+            exit 1
+          fi
+          echo "tag=${suffix}" >> "${GITHUB_OUTPUT}"
+          echo "app_image=${REGISTRY}/${APP_IMAGE_NAME}:${suffix}" >> "${GITHUB_OUTPUT}"
+          echo "cluster_image=${REGISTRY}/${CLUSTER_IMAGE_NAME}:${suffix}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and push app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.app_image }}
+            ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}:latest
+
+      - name: Install sealos
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://raw.githubusercontent.com/labring/sealos/main/scripts/install.sh" | bash -s "${SEALOS_VERSION}"
+          sealos version
+
+      - name: Build cluster image
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n%s\n' \
+            "${{ steps.meta.outputs.app_image }}" \
+            "docker.io/library/postgres:16-alpine" > deploy/images/shim/images
+          sudo sealos build \
+            --authfile "${HOME}/.docker/config.json" \
+            --build-arg APP_IMAGE="${{ steps.meta.outputs.app_image }}" \
+            -t "${{ steps.meta.outputs.cluster_image }}" \
+            deploy
+
+      - name: Push cluster image
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo sealos push \
+            --authfile "${HOME}/.docker/config.json" \
+            "${{ steps.meta.outputs.cluster_image }}" \
+            "docker://${{ steps.meta.outputs.cluster_image }}"

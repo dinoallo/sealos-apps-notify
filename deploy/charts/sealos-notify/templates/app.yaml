@@ -1,0 +1,16 @@
+{{- if .Values.app.enabled }}
+apiVersion: app.sealos.io/v1
+kind: App
+metadata:
+  name: {{ include "sealos-notify.fullname" . }}
+  namespace: app-system
+spec:
+  data:
+    desc: {{ .Values.app.description | quote }}
+    url: {{ include "sealos-notify.url" . | quote }}
+  icon: {{ default (printf "%s/favicon.ico" (include "sealos-notify.url" .)) .Values.app.icon | quote }}
+  menuData: null
+  name: {{ .Values.app.name | quote }}
+  type: iframe
+  displayType: normal
+{{- end }}
