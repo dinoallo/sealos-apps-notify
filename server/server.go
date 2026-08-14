@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/labring/sealos-notify/pkg/adapter"
+	emailadapter "github.com/labring/sealos-notify/pkg/adapter/email"
 	feishuapp "github.com/labring/sealos-notify/pkg/adapter/feishu_app"
 	feishuwebhook "github.com/labring/sealos-notify/pkg/adapter/feishu_webhook"
 	"github.com/labring/sealos-notify/pkg/auth"
@@ -151,6 +152,14 @@ func (s *Server) initAdapters() error {
 		})
 
 		switch providerConfig.Type {
+		case "smtp":
+			a, err := emailadapter.New(providerConfig.Data)
+			if err != nil {
+				return fmt.Errorf("failed to initialize smtp adapter %q: %w", providerName, err)
+			}
+			s.adapters[providerName] = a
+			logger.Info("SMTP email adapter initialized")
+
 		case "feishu_app":
 			a, err := feishuapp.New(providerConfig.Data)
 			if err != nil {

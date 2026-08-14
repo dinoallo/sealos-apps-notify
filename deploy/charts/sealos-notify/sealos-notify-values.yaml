@@ -1,0 +1,58 @@
+# User-customizable overrides for Sealos Notify cluster image installs.
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+database:
+  host: sealos-notify-pg-postgresql
+  port: 5432
+  user: postgres
+  dbname: postgres
+  sslMode: disable
+  passwordSecretName: ""
+  passwordSecretKey: password
+
+auth:
+  enabled: true
+  existingSecret: ""
+  defaultAppId: notify-console
+  defaultAppName: "Notify Console"
+  appsYaml: ""
+
+channels:
+  email:
+    enabled: false
+  feishuWebhook:
+    enabled: true
+  feishuApp:
+    enabled: false
+
+providers:
+  smtp:
+    host: smtp.example.com
+    port: 465
+    username: ""
+    passwordSecretName: ""
+    passwordSecretKey: password
+    from: notify@example.com
+    fromName: "Sealos Notify"
+    tlsMode: auto
+    timeoutSeconds: 10
+  feishuWebhook:
+    webhook: ""
+    secret: ""
+    msgType: interactive
+    timeoutSeconds: 10
+  feishuApp:
+    secretName: ""
+    receiveIdType: open_id
+    urgentUserIdType: open_id
+    msgType: text
+    urgentType: app

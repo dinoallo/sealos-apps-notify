@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sealos-notify.configMapName" . }}
+  labels:
+    {{- include "sealos-notify.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      address: {{ .Values.server.address | quote }}
+      readTimeout: {{ .Values.server.readTimeout | quote }}
+      writeTimeout: {{ .Values.server.writeTimeout | quote }}
+      idleTimeout: {{ .Values.server.idleTimeout | quote }}
+
+    database:
+      host: {{ .Values.database.host | quote }}
+      port: {{ .Values.database.port }}
+      user: {{ .Values.database.user | quote }}
+      password: ""
+      dbname: {{ .Values.database.dbname | quote }}
+      sslMode: {{ .Values.database.sslMode | quote }}
+      maxOpenConns: {{ .Values.database.maxOpenConns }}
+      maxIdleConns: {{ .Values.database.maxIdleConns }}
+      connMaxLifetime: {{ .Values.database.connMaxLifetime | quote }}
+
+    logging:
+      level: {{ .Values.logging.level | quote }}
+      format: {{ .Values.logging.format | quote }}
+      debug: {{ .Values.logging.debug }}
+
+    dispatcher:
+      enabled: {{ .Values.dispatcher.enabled }}
+      interval: {{ .Values.dispatcher.interval | quote }}
+      batchSize: {{ .Values.dispatcher.batchSize }}
+      leaseTimeout: {{ .Values.dispatcher.leaseTimeout | quote }}
+
+    auth:
+      enabled: {{ .Values.auth.enabled }}
+      credentialsFilePath: {{ ternary .Values.auth.credentialsFilePath "" .Values.auth.enabled | quote }}
+
+    defaults:
+      timeoutSeconds: {{ .Values.defaults.timeoutSeconds }}
+      maxRetry: {{ .Values.defaults.maxRetry }}
+      retryBackoffSeconds:
+{{ toYaml .Values.defaults.retryBackoffSeconds | indent 8 }}
+
+{{- if or .Values.channels.email.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
+    channels:
+{{- if .Values.channels.email.enabled }}
+      email:
+        enabled: true
+        provider: {{ .Values.channels.email.provider | quote }}
+{{- end }}
+{{- if .Values.channels.feishuWebhook.enabled }}
+      feishu_webhook:
+        enabled: true
+        provider: {{ .Values.channels.feishuWebhook.provider | quote }}
+{{- end }}
+{{- if .Values.channels.feishuApp.enabled }}
+      feishu_app:
+        enabled: true
+        provider: {{ .Values.channels.feishuApp.provider | quote }}
+{{- end }}
+{{- else }}
+    channels: {}
+{{- end }}
+
+{{- if or .Values.channels.email.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
+    providers:
+{{- if .Values.channels.email.enabled }}
+      {{ .Values.channels.email.provider }}:
+        type: smtp
+        host: {{ .Values.providers.smtp.host | quote }}
+        port: {{ .Values.providers.smtp.port }}
+        username: {{ .Values.providers.smtp.username | quote }}
+        password: "${SMTP_PASSWORD}"
+        from: {{ .Values.providers.smtp.from | quote }}
+        fromName: {{ .Values.providers.smtp.fromName | quote }}
+        tlsMode: {{ .Values.providers.smtp.tlsMode | quote }}
+        contentType: {{ .Values.providers.smtp.contentType | quote }}
+        timeoutSeconds: {{ .Values.providers.smtp.timeoutSeconds }}
+{{- end }}
+{{- if .Values.channels.feishuWebhook.enabled }}
+      {{ .Values.channels.feishuWebhook.provider }}:
+        type: feishu_webhook
+        webhook: {{ .Values.providers.feishuWebhook.webhook | quote }}
+        secret: {{ .Values.providers.feishuWebhook.secret | quote }}
+        msgType: {{ .Values.providers.feishuWebhook.msgType | quote }}
+        timeoutSeconds: {{ .Values.providers.feishuWebhook.timeoutSeconds }}
+{{- end }}
+{{- if .Values.channels.feishuApp.enabled }}
+      {{ .Values.channels.feishuApp.provider }}:
+        type: feishu_app
+        appId: "${FEISHU_APP_ID}"
+        appSecret: "${FEISHU_APP_SECRET}"
+        receiveIdType: {{ .Values.providers.feishuApp.receiveIdType | quote }}
+        urgentUserIdType: {{ .Values.providers.feishuApp.urgentUserIdType | quote }}
+        msgType: {{ .Values.providers.feishuApp.msgType | quote }}
+        urgentType: {{ .Values.providers.feishuApp.urgentType | quote }}
+{{- end }}
+{{- else }}
+    providers: {}
+{{- end }}

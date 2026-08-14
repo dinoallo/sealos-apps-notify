@@ -78,11 +78,13 @@ providers:
     host: smtp.example.com
     port: 465
     username: notify@example.com
-    passwordFromSecret:
-      name: notify-smtp-secret
-      key: password
+    password: "${SMTP_PASSWORD}"
     from: notify@example.com
-    useTLS: true
+    fromName: "Sealos Notify"
+    # auto: implicit TLS on port 465, opportunistic STARTTLS on other ports.
+    # Other values: implicit, starttls, opportunistic, none.
+    tlsMode: auto
+    timeoutSeconds: 10
 
   aliyun-sms-default:
     type: aliyun_sms

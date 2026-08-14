@@ -1,0 +1,2 @@
+# Helm templates contain Go template expressions and are rendered before use.
+deploy/charts/sealos-notify/templates/

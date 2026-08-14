@@ -134,6 +134,37 @@ func TestInitAdaptersIncludesFeishuWebhook(t *testing.T) {
 	}
 }
 
+func TestInitAdaptersIncludesSMTPEmail(t *testing.T) {
+	s := &Server{
+		config: &config.GlobalConfig{
+			Providers: map[string]config.ProviderConfig{
+				"smtp-default": {
+					Type: "smtp",
+					Data: map[string]interface{}{
+						"host":     "smtp.example.com",
+						"port":     25,
+						"from":     "notify@example.com",
+						"useTLS":   false,
+						"fromName": "Sealos Notify",
+					},
+				},
+			},
+		},
+		logger: log.NewEntry(log.New()),
+	}
+
+	if err := s.initAdapters(); err != nil {
+		t.Fatalf("initAdapters returned error: %v", err)
+	}
+	a, ok := s.adapters["smtp-default"]
+	if !ok {
+		t.Fatal("missing SMTP email adapter")
+	}
+	if a.ChannelType() != adapter.ChannelTypeEmail {
+		t.Fatalf("ChannelType = %q, want %q", a.ChannelType(), adapter.ChannelTypeEmail)
+	}
+}
+
 type captureHook struct {
 	entries []*log.Entry
 }

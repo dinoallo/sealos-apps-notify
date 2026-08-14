@@ -21,12 +21,18 @@ func TestBuildPayloadInteractiveJSONCard(t *testing.T) {
 	if got["msg_type"] != "interactive" {
 		t.Fatalf("msg_type = %#v, want interactive", got["msg_type"])
 	}
-	card, ok := got["card"].(map[string]interface{})
+	card, ok := got["card"].(json.RawMessage)
 	if !ok {
-		t.Fatalf("card type = %T, want map", got["card"])
+		t.Fatalf("card type = %T, want json.RawMessage", got["card"])
 	}
-	if _, ok := card["elements"]; !ok {
-		t.Fatalf("card missing elements: %#v", card)
+	var decodedCard struct {
+		Elements []map[string]interface{} `json:"elements"`
+	}
+	if err := json.Unmarshal(card, &decodedCard); err != nil {
+		t.Fatalf("decode card: %v", err)
+	}
+	if len(decodedCard.Elements) != 1 {
+		t.Fatalf("card elements = %#v, want one element", decodedCard.Elements)
 	}
 }
 
@@ -37,13 +43,20 @@ func TestBuildPayloadInteractiveWrapsPlainTextAsMarkdownCard(t *testing.T) {
 	if err != nil {
 		t.Fatalf("buildPayload returned error: %v", err)
 	}
-	card, ok := got["card"].(map[string]interface{})
+	card, ok := got["card"].(json.RawMessage)
 	if !ok {
-		t.Fatalf("card type = %T, want map", got["card"])
+		t.Fatalf("card type = %T, want json.RawMessage", got["card"])
 	}
-	elements := card["elements"].([]map[string]interface{})
-	if elements[0]["content"] != "**firing**" {
-		t.Fatalf("wrapped content = %#v", elements[0]["content"])
+	var decodedCard struct {
+		Elements []struct {
+			Content string `json:"content"`
+		} `json:"elements"`
+	}
+	if err := json.Unmarshal(card, &decodedCard); err != nil {
+		t.Fatalf("decode card: %v", err)
+	}
+	if len(decodedCard.Elements) != 1 || decodedCard.Elements[0].Content != "**firing**" {
+		t.Fatalf("wrapped content = %#v, want **firing**", decodedCard.Elements)
 	}
 }
 

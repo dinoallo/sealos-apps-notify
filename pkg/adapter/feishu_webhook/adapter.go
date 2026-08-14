@@ -156,7 +156,7 @@ func (a *Adapter) buildPayload(body, msgType string) (map[string]interface{}, er
 			"content":  map[string]string{"text": body},
 		}, nil
 	case "post":
-		var content interface{}
+		var content json.RawMessage
 		if err := json.Unmarshal([]byte(body), &content); err != nil {
 			return nil, fmt.Errorf("post message body must be valid JSON: %w", err)
 		}
@@ -165,9 +165,9 @@ func (a *Adapter) buildPayload(body, msgType string) (map[string]interface{}, er
 			"content":  content,
 		}, nil
 	case "interactive":
-		var card interface{}
+		var card json.RawMessage
 		if err := json.Unmarshal([]byte(body), &card); err != nil {
-			card = map[string]interface{}{
+			fallback := map[string]interface{}{
 				"config": map[string]bool{"wide_screen_mode": true},
 				"elements": []map[string]interface{}{
 					{
@@ -176,6 +176,11 @@ func (a *Adapter) buildPayload(body, msgType string) (map[string]interface{}, er
 					},
 				},
 			}
+			fallbackJSON, marshalErr := json.Marshal(fallback)
+			if marshalErr != nil {
+				return nil, fmt.Errorf("marshal fallback interactive card: %w", marshalErr)
+			}
+			card = fallbackJSON
 		}
 		return map[string]interface{}{
 			"msg_type": "interactive",

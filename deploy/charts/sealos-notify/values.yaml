@@ -1,0 +1,154 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/labring/sealos-notify
+  tag: "latest"
+  digest: ""
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "sealos-notify"
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: wildcard-cert
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 6
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+server:
+  address: ":8080"
+  readTimeout: 30s
+  writeTimeout: 30s
+  idleTimeout: 60s
+
+database:
+  host: sealos-notify-pg-postgresql
+  port: 5432
+  user: postgres
+  dbname: postgres
+  sslMode: disable
+  maxOpenConns: 25
+  maxIdleConns: 5
+  connMaxLifetime: 5m
+  password: ""
+  passwordSecretName: ""
+  passwordSecretKey: password
+
+logging:
+  level: info
+  format: json
+  debug: false
+
+dispatcher:
+  enabled: true
+  interval: 2s
+  batchSize: 20
+  leaseTimeout: 5m
+
+auth:
+  enabled: true
+  existingSecret: ""
+  secretName: sealos-notify-api-auth
+  credentialsFilePath: /etc/sealos-notify/auth/apps.yaml
+  defaultAppId: notify-console
+  defaultAppName: "Notify Console"
+  appsYaml: ""
+
+defaults:
+  timeoutSeconds: 10
+  maxRetry: 3
+  retryBackoffSeconds:
+    - 10
+    - 30
+    - 60
+
+channels:
+  email:
+    enabled: false
+    provider: smtp-default
+  feishuWebhook:
+    enabled: true
+    provider: feishu-webhook-default
+  feishuApp:
+    enabled: false
+    provider: feishu-app-urgent
+
+providers:
+  smtp:
+    host: smtp.example.com
+    port: 465
+    username: ""
+    password: ""
+    passwordSecretName: ""
+    passwordSecretKey: password
+    from: notify@example.com
+    fromName: "Sealos Notify"
+    tlsMode: auto
+    contentType: text/html
+    timeoutSeconds: 10
+  feishuWebhook:
+    webhook: ""
+    secret: ""
+    msgType: interactive
+    timeoutSeconds: 10
+  feishuApp:
+    appId: ""
+    appSecret: ""
+    secretName: ""
+    receiveIdType: open_id
+    urgentUserIdType: open_id
+    msgType: text
+    urgentType: app
