@@ -2,6 +2,8 @@
 
 sealos-notify is the unified notification service for the Sealos platform. It supports multi-channel delivery with reliable retries, idempotent requests, and horizontally scalable workers.
 
+[中文部署说明](README.zh-CN.md)
+
 ## Features
 
 - **Multiple channels**: in-app messages through CRDs, email, SMS, voice calls, Feishu webhooks, and Feishu app messages.
@@ -415,13 +417,38 @@ sealos-notify/
 
 ## Kubernetes Deployment
 
+### Helm or Cluster Image Deployment
+
+The Helm chart does not create application credentials. Create the external Secrets before installing the chart or running the cluster image entrypoint. The repository includes a local installer and a safe Secret template:
+
+```bash
+cp deploy/secrets.example.yaml deploy/secrets.yaml
+# Fill in the enabled channel credentials. Do not commit deploy/secrets.yaml.
+$EDITOR deploy/secrets.yaml
+./deploy/install.sh
+```
+
+The installer creates the namespace, applies `deploy/secrets.yaml`, renders the chart to check the required Secret names and keys, and then runs `helm upgrade --install`. Set `RELEASE_NAMESPACE` to install into a different namespace. The cluster image uses the same Secret names from its user values file, so those Secrets must already exist in the release namespace before the image is installed.
+
+| Secret | Keys | Required when |
+| --- | --- | --- |
+| `sealos-notify-pg-conn-credential` | `password` | Always; usually created by the PostgreSQL operator. |
+| `sealos-notify-api-auth` | `apps.yaml` | API authentication is enabled. |
+| `sealos-notify-feishu-webhook` | `webhook-url`, `webhook-secret` | Feishu Webhook is enabled. |
+| `sealos-notify-smtp` | `username`, `password` | Email is enabled. |
+| `sealos-notify-feishu` | `app-id`, `app-secret` | Feishu App is enabled. |
+
+Do not put the credential values in Helm `values.yaml`. For production, replace the local Secret manifest with Sealed Secrets or External Secrets while keeping the same Secret names and keys.
+
+### Raw Kubernetes Manifests
+
 ```bash
 # Build and push the image to Docker Hub.
 make docker-build IMAGE=docker.io/<dockerhub-user>/sealos-notify VERSION=test
 make docker-push IMAGE=docker.io/<dockerhub-user>/sealos-notify VERSION=test
 
-# Update deploy/kubernetes/deployment.yaml with the image name, then create
-# the Feishu credential Secret and API authentication Secret.
+# Update deploy/kubernetes/deployment.yaml with the image name, then create the
+# Secrets referenced by the raw manifests.
 kubectl create namespace ns-admin --dry-run=client -o yaml | kubectl apply -f -
 kubectl create secret generic sealos-notify-feishu \
   --from-literal=app-id=cli_xxxxxxxxxxxxxxxx \
