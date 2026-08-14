@@ -36,7 +36,7 @@ data:
 
     auth:
       enabled: {{ .Values.auth.enabled }}
-      credentialsFilePath: {{ ternary .Values.auth.credentialsFilePath "" .Values.auth.enabled | quote }}
+      credentialsFilePath: {{ ternary .Values.auth.credentialsFilePath "" (and .Values.auth.enabled (not (empty .Values.auth.secretName))) | quote }}
 
     defaults:
       timeoutSeconds: {{ .Values.defaults.timeoutSeconds }}
@@ -72,7 +72,7 @@ data:
         type: smtp
         host: {{ .Values.providers.smtp.host | quote }}
         port: {{ .Values.providers.smtp.port }}
-        username: {{ .Values.providers.smtp.username | quote }}
+        username: "${SMTP_USERNAME}"
         password: "${SMTP_PASSWORD}"
         from: {{ .Values.providers.smtp.from | quote }}
         fromName: {{ .Values.providers.smtp.fromName | quote }}
@@ -83,8 +83,8 @@ data:
 {{- if .Values.channels.feishuWebhook.enabled }}
       {{ .Values.channels.feishuWebhook.provider }}:
         type: feishu_webhook
-        webhook: {{ .Values.providers.feishuWebhook.webhook | quote }}
-        secret: {{ .Values.providers.feishuWebhook.secret | quote }}
+        webhook: "${FEISHU_WEBHOOK_URL}"
+        secret: "${FEISHU_WEBHOOK_SECRET}"
         msgType: {{ .Values.providers.feishuWebhook.msgType | quote }}
         timeoutSeconds: {{ .Values.providers.feishuWebhook.timeoutSeconds }}
 {{- end }}

@@ -64,33 +64,21 @@ Runtime image reference.
 {{- end }}
 
 {{- define "sealos-notify.authSecretName" -}}
-{{- if .Values.auth.existingSecret -}}
-{{- .Values.auth.existingSecret -}}
-{{- else -}}
 {{- .Values.auth.secretName -}}
-{{- end -}}
 {{- end }}
 
 {{- define "sealos-notify.databaseSecretName" -}}
-{{- if .Values.database.passwordSecretName -}}
 {{- .Values.database.passwordSecretName -}}
-{{- else if .Values.database.password -}}
-{{- printf "%s-database" (include "sealos-notify.fullname" .) -}}
-{{- end -}}
 {{- end }}
 
 {{- define "sealos-notify.smtpSecretName" -}}
-{{- if .Values.providers.smtp.passwordSecretName -}}
 {{- .Values.providers.smtp.passwordSecretName -}}
-{{- else if .Values.providers.smtp.password -}}
-{{- printf "%s-smtp" (include "sealos-notify.fullname" .) -}}
-{{- end -}}
 {{- end }}
 
 {{- define "sealos-notify.feishuAppSecretName" -}}
-{{- if .Values.providers.feishuApp.secretName -}}
 {{- .Values.providers.feishuApp.secretName -}}
-{{- else if or .Values.providers.feishuApp.appId .Values.providers.feishuApp.appSecret -}}
-{{- printf "%s-feishu-app" (include "sealos-notify.fullname" .) -}}
-{{- end -}}
+{{- end }}
+
+{{- define "sealos-notify.feishuWebhookSecretName" -}}
+{{- .Values.providers.feishuWebhook.secretName -}}
 {{- end }}

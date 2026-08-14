@@ -42,7 +42,6 @@ if ! helm status "${RELEASE_NAME}" -n "${RELEASE_NAMESPACE}" >/dev/null 2>&1; th
   fi
 
   adopt_namespaced_resource "${RELEASE_NAMESPACE}" configmap sealos-notify-config
-  adopt_namespaced_resource "${RELEASE_NAMESPACE}" secret sealos-notify-api-auth
   adopt_namespaced_resource "${RELEASE_NAMESPACE}" deployment sealos-notify
   adopt_namespaced_resource "${RELEASE_NAMESPACE}" service sealos-notify
   adopt_namespaced_resource "${RELEASE_NAMESPACE}" ingress sealos-notify

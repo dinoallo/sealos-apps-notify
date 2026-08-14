@@ -39,6 +39,7 @@ Thumbs.db
 config.local.yaml
 .env
 *.local.*
+deploy/secrets.yaml
 
 # Logs
 *.log
