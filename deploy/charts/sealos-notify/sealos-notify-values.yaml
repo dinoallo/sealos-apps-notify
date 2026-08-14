@@ -1,4 +1,5 @@
 # User-customizable overrides for Sealos Notify cluster image installs.
+# All referenced Secrets must already exist in the Helm release namespace.
 
 replicaCount: 1
 
@@ -16,15 +17,13 @@ database:
   user: postgres
   dbname: postgres
   sslMode: disable
-  passwordSecretName: ""
-  passwordSecretKey: password
+  # Key: password
+  passwordSecretName: sealos-notify-pg-conn-credential
 
 auth:
   enabled: true
-  existingSecret: ""
-  defaultAppId: notify-console
-  defaultAppName: "Notify Console"
-  appsYaml: ""
+  # Key: apps.yaml
+  secretName: sealos-notify-api-auth
 
 channels:
   email:
@@ -38,20 +37,20 @@ providers:
   smtp:
     host: smtp.example.com
     port: 465
-    username: ""
-    passwordSecretName: ""
-    passwordSecretKey: password
+    # Keys: username, password
+    passwordSecretName: sealos-notify-smtp
     from: notify@example.com
     fromName: "Sealos Notify"
     tlsMode: auto
     timeoutSeconds: 10
   feishuWebhook:
-    webhook: ""
-    secret: ""
+    # Keys: webhook-url, webhook-secret
+    secretName: sealos-notify-feishu-webhook
     msgType: interactive
     timeoutSeconds: 10
   feishuApp:
-    secretName: ""
+    # Keys: app-id, app-secret
+    secretName: sealos-notify-feishu
     receiveIdType: open_id
     urgentUserIdType: open_id
     msgType: text

@@ -1,5 +1,6 @@
 {{- $databaseSecretName := include "sealos-notify.databaseSecretName" . -}}
 {{- $smtpSecretName := include "sealos-notify.smtpSecretName" . -}}
+{{- $feishuWebhookSecretName := include "sealos-notify.feishuWebhookSecretName" . -}}
 {{- $feishuAppSecretName := include "sealos-notify.feishuAppSecretName" . -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -58,14 +59,31 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ $databaseSecretName }}
-                  key: {{ .Values.database.passwordSecretKey }}
+                  key: password
             {{- end }}
             {{- if and .Values.channels.email.enabled $smtpSecretName }}
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $smtpSecretName }}
+                  key: username
             - name: SMTP_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ $smtpSecretName }}
-                  key: {{ .Values.providers.smtp.passwordSecretKey }}
+                  key: password
+            {{- end }}
+            {{- if and .Values.channels.feishuWebhook.enabled $feishuWebhookSecretName }}
+            - name: FEISHU_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $feishuWebhookSecretName }}
+                  key: webhook-url
+            - name: FEISHU_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $feishuWebhookSecretName }}
+                  key: webhook-secret
             {{- end }}
             {{- if and .Values.channels.feishuApp.enabled $feishuAppSecretName }}
             - name: FEISHU_APP_ID
@@ -83,7 +101,7 @@ spec:
             - name: config
               mountPath: /etc/sealos-notify
               readOnly: true
-            {{- if .Values.auth.enabled }}
+            {{- if and .Values.auth.enabled .Values.auth.secretName }}
             - name: api-auth
               mountPath: /etc/sealos-notify/auth
               readOnly: true
@@ -98,7 +116,7 @@ spec:
         - name: config
           configMap:
             name: {{ include "sealos-notify.configMapName" . }}
-        {{- if .Values.auth.enabled }}
+        {{- if and .Values.auth.enabled .Values.auth.secretName }}
         - name: api-auth
           secret:
             secretName: {{ include "sealos-notify.authSecretName" . }}

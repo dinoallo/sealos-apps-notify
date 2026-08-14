@@ -83,9 +83,8 @@ database:
   maxOpenConns: 25
   maxIdleConns: 5
   connMaxLifetime: 5m
-  password: ""
-  passwordSecretName: ""
-  passwordSecretKey: password
+  # Must reference a pre-created Secret. The password key defaults to "password".
+  passwordSecretName: sealos-notify-pg-conn-credential
 
 logging:
   level: info
@@ -100,12 +99,9 @@ dispatcher:
 
 auth:
   enabled: true
-  existingSecret: ""
+  # Must reference a pre-created Secret containing apps.yaml.
   secretName: sealos-notify-api-auth
   credentialsFilePath: /etc/sealos-notify/auth/apps.yaml
-  defaultAppId: notify-console
-  defaultAppName: "Notify Console"
-  appsYaml: ""
 
 defaults:
   timeoutSeconds: 10
@@ -130,24 +126,21 @@ providers:
   smtp:
     host: smtp.example.com
     port: 465
-    username: ""
-    password: ""
-    passwordSecretName: ""
-    passwordSecretKey: password
+    # Must reference a pre-created Secret with username and password keys.
+    passwordSecretName: sealos-notify-smtp
     from: notify@example.com
     fromName: "Sealos Notify"
     tlsMode: auto
     contentType: text/html
     timeoutSeconds: 10
   feishuWebhook:
-    webhook: ""
-    secret: ""
+    # Must reference a pre-created Secret with webhook-url and webhook-secret keys.
+    secretName: sealos-notify-feishu-webhook
     msgType: interactive
     timeoutSeconds: 10
   feishuApp:
-    appId: ""
-    appSecret: ""
-    secretName: ""
+    # Must reference a pre-created Secret with app-id and app-secret keys.
+    secretName: sealos-notify-feishu
     receiveIdType: open_id
     urgentUserIdType: open_id
     msgType: text
