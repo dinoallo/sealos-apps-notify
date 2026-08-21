@@ -63,6 +63,54 @@ channels:
 
 Each provider uses `type` to select an adapter. The remaining fields are passed to the adapter constructor as provider data.
 
+## SMS Providers
+
+The `sms` channel supports Volcengine SMS and Alibaba Cloud SMS. Credentials
+should be supplied through environment variables or a pre-created Kubernetes
+Secret.
+
+### Volcengine SMS
+
+```yaml
+channels:
+  sms:
+    enabled: true
+    provider: volcengine-sms-default
+
+providers:
+  volcengine-sms-default:
+    type: volcengine_sms
+    endpoint: sms.volcengineapi.com
+    region: cn-north-1
+    accessKey: "${VOLCENGINE_SMS_ACCESS_KEY}"
+    secretKey: "${VOLCENGINE_SMS_SECRET_KEY}"
+    smsAccount: "YOUR_SMS_ACCOUNT"
+    sign: "SEALOS"
+    timeoutSeconds: 10
+```
+
+### Alibaba Cloud SMS
+
+```yaml
+channels:
+  sms:
+    enabled: true
+    provider: aliyun-sms-default
+
+providers:
+  aliyun-sms-default:
+    type: aliyun_sms
+    endpoint: dysmsapi.aliyuncs.com
+    accessKeyId: "${ALIYUN_SMS_ACCESS_KEY_ID}"
+    accessKeySecret: "${ALIYUN_SMS_ACCESS_KEY_SECRET}"
+    signName: "SEALOS"
+    timeoutSeconds: 10
+```
+
+For both providers, the notification template's `templateCode` is passed
+through as the provider-side template ID. The request `params` map is sent as
+the JSON `TemplateParam` value, and recipients must use type `phone`.
+
 ## Feishu Urgent Notifications
 
 Feishu urgent notification is a Feishu app message feature. After the normal app message is created, the adapter can trigger an additional in-app urgent alert, SMS alert, or phone-call alert.

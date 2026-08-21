@@ -44,12 +44,17 @@ data:
       retryBackoffSeconds:
 {{ toYaml .Values.defaults.retryBackoffSeconds | indent 8 }}
 
-{{- if or .Values.channels.email.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
+{{- if or .Values.channels.email.enabled .Values.channels.sms.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
     channels:
 {{- if .Values.channels.email.enabled }}
       email:
         enabled: true
         provider: {{ .Values.channels.email.provider | quote }}
+{{- end }}
+{{- if .Values.channels.sms.enabled }}
+      sms:
+        enabled: true
+        provider: {{ .Values.channels.sms.provider | quote }}
 {{- end }}
 {{- if .Values.channels.feishuWebhook.enabled }}
       feishu_webhook:
@@ -65,7 +70,7 @@ data:
     channels: {}
 {{- end }}
 
-{{- if or .Values.channels.email.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
+{{- if or .Values.channels.email.enabled .Values.channels.sms.enabled .Values.channels.feishuWebhook.enabled .Values.channels.feishuApp.enabled }}
     providers:
 {{- if .Values.channels.email.enabled }}
       {{ .Values.channels.email.provider }}:
@@ -79,6 +84,28 @@ data:
         tlsMode: {{ .Values.providers.smtp.tlsMode | quote }}
         contentType: {{ .Values.providers.smtp.contentType | quote }}
         timeoutSeconds: {{ .Values.providers.smtp.timeoutSeconds }}
+{{- end }}
+{{- if .Values.channels.sms.enabled }}
+      {{ .Values.channels.sms.provider }}:
+{{- if eq .Values.channels.sms.providerType "aliyun_sms" }}
+        type: aliyun_sms
+        endpoint: {{ .Values.providers.aliyunSms.endpoint | quote }}
+        accessKeyId: "${ALIYUN_SMS_ACCESS_KEY_ID}"
+        accessKeySecret: "${ALIYUN_SMS_ACCESS_KEY_SECRET}"
+        signName: {{ .Values.providers.aliyunSms.signName | quote }}
+        outId: {{ .Values.providers.aliyunSms.outId | quote }}
+        timeoutSeconds: {{ .Values.providers.aliyunSms.timeoutSeconds }}
+{{- else }}
+        type: volcengine_sms
+        endpoint: {{ .Values.providers.volcengineSms.endpoint | quote }}
+        region: {{ .Values.providers.volcengineSms.region | quote }}
+        accessKey: "${VOLCENGINE_SMS_ACCESS_KEY}"
+        secretKey: "${VOLCENGINE_SMS_SECRET_KEY}"
+        smsAccount: {{ .Values.providers.volcengineSms.smsAccount | quote }}
+        sign: {{ .Values.providers.volcengineSms.sign | quote }}
+        tag: {{ .Values.providers.volcengineSms.tag | quote }}
+        timeoutSeconds: {{ .Values.providers.volcengineSms.timeoutSeconds }}
+{{- end }}
 {{- end }}
 {{- if .Values.channels.feishuWebhook.enabled }}
       {{ .Values.channels.feishuWebhook.provider }}:

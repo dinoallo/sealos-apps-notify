@@ -115,6 +115,10 @@ channels:
   email:
     enabled: false
     provider: smtp-default
+  sms:
+    enabled: false
+    provider: volcengine-sms-default
+    providerType: volcengine_sms
   feishuWebhook:
     enabled: true
     provider: feishu-webhook-default
@@ -145,3 +149,21 @@ providers:
     urgentUserIdType: open_id
     msgType: text
     urgentType: app
+  volcengineSms:
+    endpoint: sms.volcengineapi.com
+    region: cn-north-1
+    secretName: ""
+    accessKeySecretKey: access-key
+    secretKeySecretKey: secret-key
+    smsAccount: ""
+    sign: ""
+    tag: ""
+    timeoutSeconds: 10
+  aliyunSms:
+    endpoint: dysmsapi.aliyuncs.com
+    secretName: ""
+    accessKeyIdSecretKey: access-key-id
+    accessKeySecretKey: access-key-secret
+    signName: ""
+    outId: ""
+    timeoutSeconds: 10

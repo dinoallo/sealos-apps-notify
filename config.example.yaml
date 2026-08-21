@@ -55,7 +55,7 @@ channels:
     provider: smtp-default
   sms:
     enabled: true
-    provider: aliyun-sms-default
+    provider: volcengine-sms-default
   voice:
     enabled: true
     provider: volcengine-vms-default
@@ -86,16 +86,23 @@ providers:
     tlsMode: auto
     timeoutSeconds: 10
 
+  volcengine-sms-default:
+    type: volcengine_sms
+    endpoint: sms.volcengineapi.com
+    region: cn-north-1
+    accessKey: "${VOLCENGINE_SMS_ACCESS_KEY}"
+    secretKey: "${VOLCENGINE_SMS_SECRET_KEY}"
+    smsAccount: "YOUR_SMS_ACCOUNT"
+    sign: "SEALOS"
+    timeoutSeconds: 10
+
   aliyun-sms-default:
     type: aliyun_sms
     endpoint: dysmsapi.aliyuncs.com
-    accessKeyIdFromSecret:
-      name: notify-sms-secret
-      key: accessKeyId
-    accessKeySecretFromSecret:
-      name: notify-sms-secret
-      key: accessKeySecret
-    signName: SEALOS
+    accessKeyId: "${ALIYUN_SMS_ACCESS_KEY_ID}"
+    accessKeySecret: "${ALIYUN_SMS_ACCESS_KEY_SECRET}"
+    signName: "SEALOS"
+    timeoutSeconds: 10
 
   volcengine-vms-default:
     type: volcengine_vms

@@ -82,3 +82,11 @@ Runtime image reference.
 {{- define "sealos-notify.feishuWebhookSecretName" -}}
 {{- .Values.providers.feishuWebhook.secretName -}}
 {{- end }}
+
+{{- define "sealos-notify.volcengineSmsSecretName" -}}
+{{- .Values.providers.volcengineSms.secretName -}}
+{{- end }}
+
+{{- define "sealos-notify.aliyunSmsSecretName" -}}
+{{- .Values.providers.aliyunSms.secretName -}}
+{{- end }}

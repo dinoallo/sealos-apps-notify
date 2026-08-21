@@ -126,7 +126,14 @@ All `/api/v1/*` endpoints require authentication except `GET /health`. See the [
 
 ## Configuration
 
-See the [configuration reference](docs/configuration.md) and [`config.example.yaml`](config.example.yaml) for runtime settings, provider configuration, Feishu urgent notifications, and environment variable overrides.
+See the [configuration reference](docs/configuration.md) and [config.example.yaml](config.example.yaml) for runtime settings, provider configuration, Feishu urgent notifications, SMS providers, and environment variable overrides.
+
+### Cloud SMS
+
+The sms channel supports Volcengine SMS (volcengine_sms) and Alibaba Cloud
+SMS (aliyun_sms). Provider examples and Secret requirements are documented
+in the [configuration reference](docs/configuration.md).
+
 
 ## Project Layout
 
@@ -147,7 +154,11 @@ sealos-notify/
 │   ├── dispatcher/                 # Queue polling, dispatch, and retry logic
 │   └── adapter/
 │       ├── adapter.go              # Adapter interface definitions
-│       └── feishu_app/             # Feishu app urgent notification adapter
+│       ├── aliyun_sms/             # Alibaba Cloud SMS adapter
+│       ├── email/                  # SMTP email adapter
+│       ├── feishu_app/             # Feishu app urgent notification adapter
+│       ├── feishu_webhook/          # Feishu webhook adapter
+│       └── volcengine_sms/          # Volcengine SMS adapter
 ├── server/                         # HTTP server, routes, and handlers
 └── deploy/kubernetes/              # Kubernetes manifests
 ```

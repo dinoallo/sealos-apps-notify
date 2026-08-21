@@ -165,6 +165,65 @@ func TestInitAdaptersIncludesSMTPEmail(t *testing.T) {
 	}
 }
 
+func TestInitAdaptersIncludesVolcengineSMS(t *testing.T) {
+	s := &Server{
+		config: &config.GlobalConfig{
+			Providers: map[string]config.ProviderConfig{
+				"volcengine-sms-default": {
+					Type: "volcengine_sms",
+					Data: map[string]interface{}{
+						"accessKey":  "test-ak",
+						"secretKey":  "test-sk",
+						"smsAccount": "notify",
+						"sign":       "Sealos",
+					},
+				},
+			},
+		},
+		logger: log.NewEntry(log.New()),
+	}
+
+	if err := s.initAdapters(); err != nil {
+		t.Fatalf("initAdapters returned error: %v", err)
+	}
+	a, ok := s.adapters["volcengine-sms-default"]
+	if !ok {
+		t.Fatal("missing Volcengine SMS adapter")
+	}
+	if a.ChannelType() != adapter.ChannelTypeSMS {
+		t.Fatalf("ChannelType = %q, want %q", a.ChannelType(), adapter.ChannelTypeSMS)
+	}
+}
+
+func TestInitAdaptersIncludesAliyunSMS(t *testing.T) {
+	s := &Server{
+		config: &config.GlobalConfig{
+			Providers: map[string]config.ProviderConfig{
+				"aliyun-sms-default": {
+					Type: "aliyun_sms",
+					Data: map[string]interface{}{
+						"accessKeyId":     "test-ak",
+						"accessKeySecret": "test-sk",
+						"signName":        "Sealos",
+					},
+				},
+			},
+		},
+		logger: log.NewEntry(log.New()),
+	}
+
+	if err := s.initAdapters(); err != nil {
+		t.Fatalf("initAdapters returned error: %v", err)
+	}
+	a, ok := s.adapters["aliyun-sms-default"]
+	if !ok {
+		t.Fatal("missing Alibaba Cloud SMS adapter")
+	}
+	if a.ChannelType() != adapter.ChannelTypeSMS {
+		t.Fatalf("ChannelType = %q, want %q", a.ChannelType(), adapter.ChannelTypeSMS)
+	}
+}
+
 type captureHook struct {
 	entries []*log.Entry
 }

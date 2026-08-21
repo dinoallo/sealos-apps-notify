@@ -13,9 +13,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/labring/sealos-notify/pkg/adapter"
+	aliyunsms "github.com/labring/sealos-notify/pkg/adapter/aliyun_sms"
 	emailadapter "github.com/labring/sealos-notify/pkg/adapter/email"
 	feishuapp "github.com/labring/sealos-notify/pkg/adapter/feishu_app"
 	feishuwebhook "github.com/labring/sealos-notify/pkg/adapter/feishu_webhook"
+	volcenginesms "github.com/labring/sealos-notify/pkg/adapter/volcengine_sms"
 	"github.com/labring/sealos-notify/pkg/auth"
 	"github.com/labring/sealos-notify/pkg/config"
 	"github.com/labring/sealos-notify/pkg/database"
@@ -152,6 +154,14 @@ func (s *Server) initAdapters() error {
 		})
 
 		switch providerConfig.Type {
+		case "aliyun_sms":
+			a, err := aliyunsms.New(providerConfig.Data)
+			if err != nil {
+				return fmt.Errorf("failed to initialize aliyun_sms adapter %q: %w", providerName, err)
+			}
+			s.adapters[providerName] = a
+			logger.Info("Alibaba Cloud SMS adapter initialized")
+
 		case "smtp":
 			a, err := emailadapter.New(providerConfig.Data)
 			if err != nil {
@@ -159,6 +169,14 @@ func (s *Server) initAdapters() error {
 			}
 			s.adapters[providerName] = a
 			logger.Info("SMTP email adapter initialized")
+
+		case "volcengine_sms":
+			a, err := volcenginesms.New(providerConfig.Data)
+			if err != nil {
+				return fmt.Errorf("failed to initialize volcengine_sms adapter %q: %w", providerName, err)
+			}
+			s.adapters[providerName] = a
+			logger.Info("Volcengine SMS adapter initialized")
 
 		case "feishu_app":
 			a, err := feishuapp.New(providerConfig.Data)

@@ -2,6 +2,8 @@
 {{- $smtpSecretName := include "sealos-notify.smtpSecretName" . -}}
 {{- $feishuWebhookSecretName := include "sealos-notify.feishuWebhookSecretName" . -}}
 {{- $feishuAppSecretName := include "sealos-notify.feishuAppSecretName" . -}}
+{{- $volcengineSmsSecretName := include "sealos-notify.volcengineSmsSecretName" . -}}
+{{- $aliyunSmsSecretName := include "sealos-notify.aliyunSmsSecretName" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -96,6 +98,30 @@ spec:
                 secretKeyRef:
                   name: {{ $feishuAppSecretName }}
                   key: app-secret
+            {{- end }}
+            {{- if and .Values.channels.sms.enabled (eq .Values.channels.sms.providerType "volcengine_sms") $volcengineSmsSecretName }}
+            - name: VOLCENGINE_SMS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $volcengineSmsSecretName }}
+                  key: {{ .Values.providers.volcengineSms.accessKeySecretKey }}
+            - name: VOLCENGINE_SMS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $volcengineSmsSecretName }}
+                  key: {{ .Values.providers.volcengineSms.secretKeySecretKey }}
+            {{- end }}
+            {{- if and .Values.channels.sms.enabled (eq .Values.channels.sms.providerType "aliyun_sms") $aliyunSmsSecretName }}
+            - name: ALIYUN_SMS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $aliyunSmsSecretName }}
+                  key: {{ .Values.providers.aliyunSms.accessKeyIdSecretKey }}
+            - name: ALIYUN_SMS_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $aliyunSmsSecretName }}
+                  key: {{ .Values.providers.aliyunSms.accessKeySecretKey }}
             {{- end }}
           volumeMounts:
             - name: config

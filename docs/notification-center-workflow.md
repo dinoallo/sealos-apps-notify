@@ -95,8 +95,63 @@ providers:
 
 | Provider type | Channel | 说明 |
 | --- | --- | --- |
+| `volcengine_sms` | `sms` | 火山引擎短信，使用手机号和 provider 模板 |
+| `aliyun_sms` | `sms` | 阿里云短信，使用手机号和 provider 模板 |
 | `feishu_webhook` | `feishu_webhook` | 飞书自定义机器人 webhook，适合群告警卡片 |
 | `feishu_app` | `feishu_app` | 飞书应用消息，可支持加急 |
+
+短信 provider 示例：
+
+```yaml
+channels:
+  sms:
+    enabled: true
+    provider: volcengine-sms-default
+
+providers:
+  volcengine-sms-default:
+    type: volcengine_sms
+    endpoint: sms.volcengineapi.com
+    region: cn-north-1
+    accessKey: "${VOLCENGINE_SMS_ACCESS_KEY}"
+    secretKey: "${VOLCENGINE_SMS_SECRET_KEY}"
+    smsAccount: "YOUR_SMS_ACCOUNT"
+    sign: "SEALOS"
+    timeoutSeconds: 10
+```
+
+阿里云短信也可以作为 `sms` channel 的 provider：
+
+```yaml
+channels:
+  sms:
+    enabled: true
+    provider: aliyun-sms-default
+
+providers:
+  aliyun-sms-default:
+    type: aliyun_sms
+    endpoint: dysmsapi.aliyuncs.com
+    accessKeyId: "${ALIYUN_SMS_ACCESS_KEY_ID}"
+    accessKeySecret: "${ALIYUN_SMS_ACCESS_KEY_SECRET}"
+    signName: "SEALOS"
+    timeoutSeconds: 10
+```
+
+短信模板的 `templateCode` 是 provider 侧模板 ID，通知请求中的 `params` 会
+作为 `TemplateParam` JSON 发送。收件人类型必须是 `phone`，例如：
+
+```json
+{
+  "channels": {
+    "sms": {
+      "template": "incident-sms",
+      "params": {"severity": "P1", "incident": "database unavailable"}
+    }
+  },
+  "recipients": [{"type": "phone", "value": "+8613800000000"}]
+}
+```
 
 ## 4. 数据库初始化
 
