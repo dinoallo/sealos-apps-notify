@@ -11,19 +11,6 @@ import (
 	"github.com/labring/sealos-notify/pkg/adapter"
 )
 
-func validData(endpoint string) map[string]interface{} {
-	return map[string]interface{}{
-		"endpoint":       endpoint,
-		"region":         "cn-north-1",
-		"accessKey":      "test-ak",
-		"secretKey":      "test-sk",
-		"smsAccount":     "notify",
-		"sign":           "Sealos",
-		"tag":            "notify-test",
-		"timeoutSeconds": 2,
-	}
-}
-
 func TestNewDefaultsAndValidation(t *testing.T) {
 	a, err := New(map[string]interface{}{
 		"accessKey":  "test-ak",

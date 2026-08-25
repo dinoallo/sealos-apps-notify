@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // Alibaba Cloud SendSms requires HMAC-SHA1.
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
